@@ -61,8 +61,7 @@
 
 /*==================[inclusions]=============================================*/
 
-#include "uartBridge_ESP8266.h"   /* <= own header */
-
+#include "../inc/main.h"   /* <= own header */
 #include "sapi.h"                 /* <= sAPI header */
 
 /*==================[macros and definitions]=================================*/
@@ -88,32 +87,32 @@ static uint32_t pausems_count;
 
 /*==================[external functions definition]==========================*/
 
-void imprimirMensajeDeBienvenida( void ){
+void imprimirMensajeDeBienvenida( uartMap_t uart ){
 
    /* Imprimo el mensaje de bienvenida */
-   uartWriteString( UART_USB, 
+   uartWriteString( uart,
       "Bievenido al asistente de configuracion del modulo ESP8266\r\n" );
-   uartWriteString( UART_USB, 
+   uartWriteString( uart,
       "Antes de continuar, por favor asegurese que su terminal\r\n" );
-   uartWriteString( UART_USB, 
+   uartWriteString( uart,
       "serie dispone del terminador CR+LF (enter)\r\n\r\n" );
-   uartWriteString( UART_USB, 
+   uartWriteString( uart,
       "A continuacion se realiza un listado de algunos de los\r\n" );
-   uartWriteString( UART_USB, "comandos AT disponibles:\r\n\r\n" );
-   uartWriteString( UART_USB, 
+   uartWriteString( uart, "comandos AT disponibles:\r\n\r\n" );
+   uartWriteString( uart,
       "> Saber si el modulo responde correctamente: AT\r\n" );
-   uartWriteString( UART_USB, 
+   uartWriteString( uart,
       "> Version del Firmware: AT+GMR\r\n" );
-   uartWriteString( UART_USB, "> Resetear el modulo: AT+RST\r\n" );
-   uartWriteString( UART_USB, 
+   uartWriteString( uart, "> Resetear el modulo: AT+RST\r\n" );
+   uartWriteString( uart,
       "> Listar todas las redes disponibles: AT+CWLAP\r\n" );
-   uartWriteString( UART_USB, 
+   uartWriteString( uart,
       "> Checkear la red actual: AT+CWJAP?\r\n" );
-   uartWriteString( UART_USB, 
+   uartWriteString( uart,
       "> Unirse a una red: AT+CWJAP=\"nombreRedInalambrica\",\"password\"\r\n" );
-   uartWriteString( UART_USB, 
+   uartWriteString( uart,
       "  - NOTA: Las comillas dobles son parte del mensaje\r\n" );
-   uartWriteString( UART_USB, 
+   uartWriteString( uart,
       "> Salir de la red: AT+CWQAP\r\n" );
 
    delay(100);
@@ -177,10 +176,10 @@ int main(void){
    gpioConfig( 0, GPIO_ENABLE );
 
    /* Configuración de pines de entrada para Teclas de la CIAA-NXP */
-   gpioConfig( TEC1, GPIO_INPUT );
-   gpioConfig( TEC2, GPIO_INPUT );
-   gpioConfig( TEC3, GPIO_INPUT );
-   gpioConfig( TEC4, GPIO_INPUT );
+   gpioConfig( TEC1, GPIO_INPUT_PULLDOWN );
+   gpioConfig( TEC2, GPIO_INPUT_PULLDOWN );
+   gpioConfig( TEC3, GPIO_INPUT_PULLDOWN );
+   gpioConfig( TEC4, GPIO_INPUT_PULLDOWN );
 
    /* Configuración de pines de salida para Leds de la CIAA-NXP */
    gpioConfig( LEDR, GPIO_OUTPUT );
@@ -206,19 +205,21 @@ int main(void){
    uint8_t datoRS232 = 0;
    uint8_t salidaUART;
    uint8_t percentageUART;
-	 uint8_t hexValue;
-	 uint32_t BUTTON_STATUS_POLLED = 0x00;
-	 uint8_t current_duty = 0x00;
+   uint8_t hexValue;
+   uint32_t BUTTON_STATUS_POLLED = 0x00;
+   uint8_t current_duty = 0x00;
 
    InputDTO maquina = {.state=IDLE_MSG, .data={[0]='0', [1]='0', [2]='\0'}};
 
    /* ------------- REPETIR POR SIEMPRE ------------- */
    while(1) {
 
-      if( uartReadByte( UART_USB, &datoUSB ))
+      if( uartReadByte( UART_USB, &datoUSB )){
+    	  uartWriteByte(UART_USB, datoUSB);
         transicionar_dto(&maquina, datoUSB);
-      else if (uartReadByte( UART_232, &datoRS232 ) )
+      }else if (uartReadByte( UART_232, &datoRS232 ) ){
         transicionar_dto(&maquina, datoRS232);
+      }
 
       //Si la maquina procesó una palabra, se hace la interpolacion lineal y se calculan los porcentajes
       if(maquina.state == END_MSG){
@@ -234,27 +235,30 @@ int main(void){
         maquina.state = IDLE_MSG;
       }
 
-      BUTTON_STATUS_POLLED = Buttons_GetStatus();
-      //Si se presionan varios botones al mismo tiempo BUTTON_STATUS_POLLED no va a estar entre 1..4
-      if(BUTTON_STATUS_POLLED != 0  && BUTTON_STATUS_POLLED > 0 && BUTTON_STATUS_POLLED < 5 ){
-        while(antiRebAcum < BTN_SHOULD_CLICK && Buttons_GetStatus() == BUTTON_STATUS_POLLED){
-          antiRebAcum++;
-          pausems(10);
-        }
-
-        if(antiRebAcum == BTN_SHOULD_CLICK){
-          current_duty = boton_salida(current_duty, BUTTON_STATUS_POLLED-1);
-        }
-
-        antiRebAcum = 0;
-      }
-
       /* Si presionan TEC1 muestro el mensaje de bienvenida */
       if( !gpioRead( TEC1 ) ){
-         gpioWrite( LEDB, ON );
-         imprimirMensajeDeBienvenida();
-         gpioWrite( LEDB, OFF );
+    	  gpioWrite( LEDB, ON );
+    	  imprimirMensajeDeBienvenida(UART_USB);
+    	  imprimirMensajeDeBienvenida(UART_232);
+    	  current_duty = boton_salida(current_duty, TEC1 - TEC1);
+    	  gpioWrite( LEDB, OFF );
+      } else if (!gpioRead(TEC2)) {
+    	  current_duty = boton_salida(current_duty, TEC2 - TEC1);
+//    	  while (!gpioRead(TEC2)){
+//    		  current_duty = boton_salida(current_duty, TEC2 - TEC1);
+//    	  }
+      } else if (!gpioRead(TEC3)) {
+    	  current_duty = boton_salida(current_duty, TEC3 - TEC1);
+//    	  while (!gpioRead(TEC3)){
+//    		  current_duty = boton_salida(current_duty, TEC3 - TEC1);
+//    	  }
+      } else if (!gpioRead(TEC4)) {
+    	  current_duty = boton_salida(current_duty, TEC4 - TEC1);
+//    	  while (!gpioRead(TEC4)){
+//    		  current_duty = boton_salida(current_duty, TEC4 - TEC1);
+//    	  }
       }
+
 
    }
 

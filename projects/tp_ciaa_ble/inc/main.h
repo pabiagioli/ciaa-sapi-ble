@@ -37,7 +37,8 @@
 #define _UART_BRIDGE_ESP8266_H_
 
 /*==================[inclusions]=============================================*/
-
+#include <stdio.h>
+#include <stdint.h>
 #include "btn_dto.h"
 #include "serial_dto.h"
 /*==================[cplusplus]==============================================*/
