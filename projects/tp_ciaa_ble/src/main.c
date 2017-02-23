@@ -61,8 +61,8 @@
 
 /*==================[inclusions]=============================================*/
 
-#include "../inc/main.h"   /* <= own header */
-#include "sapi.h"                 /* <= sAPI header */
+#include "main.h"   /* <= own header */
+#include "sapi.h"   /* <= sAPI header */
 
 /*==================[macros and definitions]=================================*/
 
@@ -161,6 +161,14 @@ void pausems(uint32_t t)
    }
 }
 
+void printInterpolateMessage( uartMap_t uart, char* uartInput, char* uartInterpolated){
+  uartWriteString(uart, "interpolar ");
+  uartWriteString(uart, uartInput);
+  uartWriteString(uart, " => ");
+  uartWriteString(uart, uartInterpolated);
+  uartWriteString(uart,"\r\n");
+}
+
 /* FUNCION PRINCIPAL, PUNTO DE ENTRADA AL PROGRAMA LUEGO DE RESET. */
 int main(void){
 
@@ -199,14 +207,12 @@ int main(void){
    /* Inicializar PWM */
    init_hw_PWM();
 
-   volatile int antiRebAcum = 0;
-
+   //char *interpolateMsg ;
    uint8_t datoUSB  = 0;
    uint8_t datoRS232 = 0;
    uint8_t salidaUART;
    uint8_t percentageUART;
    uint8_t hexValue;
-   uint32_t BUTTON_STATUS_POLLED = 0x00;
    uint8_t current_duty = 0x00;
 
    InputDTO maquina = {.state=IDLE_MSG, .data={[0]='0', [1]='0', [2]='\0'}};
@@ -232,6 +238,13 @@ int main(void){
         //cambiar intensidad del LED 1 con la salida
         //LED_Duty_change(salidaUART, LED1);
         Chip_SCTPWM_SetDutyCycle(LPC_SCT, 3, Chip_SCTPWM_PercentageToTicks(LPC_SCT, salidaUART));
+        //sprintf(interpolateMsg, "interpolar %x => %x ",percentageUART,salidaUART);
+        //uartWriteString(UART_USB, "interpolar" + percentageUART + "=>" + salidaUART + "\r\n");
+        //uartWriteString(UART_232, "interpolar" + percentageUART + "=>" + salidaUART + "\r\n");
+        //uartWriteString(UART_USB, "interpolar");
+        //uartWriteString(UART_232, interpolateMsg);
+        printInterpolateMessage(UART_USB, maquina.data, salidaUART);
+        printInterpolateMessage(UART_232, maquina.data, salidaUART);
         maquina.state = IDLE_MSG;
       }
 

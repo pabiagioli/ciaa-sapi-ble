@@ -8,6 +8,15 @@ static uint8_t nibbleFromChar(uint8_t c) {
     return 255;
 }
 
+uint8_t byteMap[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+int32_t byteMapLen = sizeof(byteMap);
+
+uint8_t nibbleToChar(uint8_t nibble)
+{
+	if(nibble < byteMapLen) return byteMap[nibble];
+	return '*';
+}
+
 uint8_t string_to_8bit_hex(char *str){
 	return (nibbleFromChar(str[0]) * 16) + nibbleFromChar(str[1]);
 }
@@ -38,14 +47,8 @@ uint16_t funcion_interpolacion_lineal (uint16_t x, uint16_t x1, uint16_t y1, uin
 }
 
 void transicionar_dto (InputDTO *dto, uint8_t input){
-  if(dto->state == INVALID_MSG && input == ':'){
+  if(input == ':'){
     dto->state = START_MSG;
-    //dto->data = "";
-  } else if(dto->state == IDLE_MSG && input == ':'){
-    dto->state = START_MSG;
-    //dto->data = "";
-  } else if (dto->state == IDLE_MSG && input != ':') {
-    dto->state = INVALID_MSG;
   } else if (dto->state == START_MSG && ((input >= '0' && input <= '9') || (input >= 'a' && input <= 'f') || (input >= 'A' && input <= 'F') )) {
     dto->state = MSG_DIGIT1;
     dto->data[0] = input;
