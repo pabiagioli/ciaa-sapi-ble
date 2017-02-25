@@ -12,4 +12,6 @@
  libgcc.a
  libc.a
  libm.a
+ libg.a
+ libnosys.a
  )

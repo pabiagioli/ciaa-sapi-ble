@@ -161,12 +161,11 @@ void pausems(uint32_t t)
    }
 }
 
-void printInterpolateMessage( uartMap_t uart, char* uartInput, char* uartInterpolated){
-  uartWriteString(uart, "interpolar ");
-  uartWriteString(uart, uartInput);
-  uartWriteString(uart, " => ");
-  uartWriteString(uart, uartInterpolated);
-  uartWriteString(uart,"\r\n");
+void printInterpolateMessage( uartMap_t uart, char* uartInput, uint8_t uartLed1, uint8_t uartLed2){
+  char interpolateMsg [40];
+  uint8_t HexOutput = ((uint8_t)uartLed2) * ((uint8_t)0xff)/((uint8_t)0x64);
+  sprintf(interpolateMsg, "interpolar 0x%s => (%d, %d) => 0x%02x \r\n", uartInput, uartLed1, uartLed2, HexOutput);
+  uartWriteString(uart, interpolateMsg);
 }
 
 /* FUNCION PRINCIPAL, PUNTO DE ENTRADA AL PROGRAMA LUEGO DE RESET. */
@@ -238,13 +237,9 @@ int main(void){
         //cambiar intensidad del LED 1 con la salida
         //LED_Duty_change(salidaUART, LED1);
         Chip_SCTPWM_SetDutyCycle(LPC_SCT, 3, Chip_SCTPWM_PercentageToTicks(LPC_SCT, salidaUART));
-        //sprintf(interpolateMsg, "interpolar %x => %x ",percentageUART,salidaUART);
-        //uartWriteString(UART_USB, "interpolar" + percentageUART + "=>" + salidaUART + "\r\n");
-        //uartWriteString(UART_232, "interpolar" + percentageUART + "=>" + salidaUART + "\r\n");
-        //uartWriteString(UART_USB, "interpolar");
-        //uartWriteString(UART_232, interpolateMsg);
-        printInterpolateMessage(UART_USB, maquina.data, salidaUART);
-        printInterpolateMessage(UART_232, maquina.data, salidaUART);
+        
+        printInterpolateMessage(UART_USB, maquina.data, percentageUART, salidaUART);
+        printInterpolateMessage(UART_232, maquina.data, percentageUART, salidaUART);
         maquina.state = IDLE_MSG;
       }
 
