@@ -172,10 +172,15 @@ int main(void){
    gpioConfig( LED2, GPIO_OUTPUT );
    gpioConfig( LED3, GPIO_OUTPUT );
 
-   /* Inicializar las UART a 115200 baudios */
+   /* Inicializar la UART USB a 115200 baudios */
    uartConfig( UART_USB, BAUD_RATE );
+   
+   /* Inicializar la UART RS232 a 9600 baudios */
    uartConfig( UART_232, 9600 );
-   //uartWriteString(UART_232, "AT\r\n");
+   
+   /* uartWriteString(UART_232, "AT\r\n"); */
+   
+   /* Configurar el modulo bluetooth a 9600 baudios y en modo Master */
    uartWriteString(UART_232, "AT+BAUD0\r\n");
    uartWriteString(UART_232, "AT+ROLE0\r\n");
    
