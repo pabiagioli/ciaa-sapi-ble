@@ -90,31 +90,7 @@ static uint32_t pausems_count;
 void imprimirMensajeDeBienvenida( uartMap_t uart ){
 
    /* Imprimo el mensaje de bienvenida */
-   uartWriteString( uart,
-      "Bievenido al asistente de configuracion del modulo ESP8266\r\n" );
-   uartWriteString( uart,
-      "Antes de continuar, por favor asegurese que su terminal\r\n" );
-   uartWriteString( uart,
-      "serie dispone del terminador CR+LF (enter)\r\n\r\n" );
-   uartWriteString( uart,
-      "A continuacion se realiza un listado de algunos de los\r\n" );
-   uartWriteString( uart, "comandos AT disponibles:\r\n\r\n" );
-   uartWriteString( uart,
-      "> Saber si el modulo responde correctamente: AT\r\n" );
-   uartWriteString( uart,
-      "> Version del Firmware: AT+GMR\r\n" );
-   uartWriteString( uart, "> Resetear el modulo: AT+RST\r\n" );
-   uartWriteString( uart,
-      "> Listar todas las redes disponibles: AT+CWLAP\r\n" );
-   uartWriteString( uart,
-      "> Checkear la red actual: AT+CWJAP?\r\n" );
-   uartWriteString( uart,
-      "> Unirse a una red: AT+CWJAP=\"nombreRedInalambrica\",\"password\"\r\n" );
-   uartWriteString( uart,
-      "  - NOTA: Las comillas dobles son parte del mensaje\r\n" );
-   uartWriteString( uart,
-      "> Salir de la red: AT+CWQAP\r\n" );
-
+   uartWriteString( uart, MSG_FTO);
    delay(100);
 }
 
@@ -199,7 +175,7 @@ int main(void){
    /* Inicializar las UART a 115200 baudios */
    uartConfig( UART_USB, BAUD_RATE );
    uartConfig( UART_232, 9600 );
-   uartWriteString(UART_232, "AT\r\n");
+   //uartWriteString(UART_232, "AT\r\n");
    uartWriteString(UART_232, "AT+BAUD0\r\n");
    uartWriteString(UART_232, "AT+ROLE0\r\n");
    
